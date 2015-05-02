@@ -34,3 +34,22 @@ is_started() ->
          true
    end.
 
+controller(Port) ->
+   linten_on_tcp(Port),
+   c_loop([], 0, 0).
+
+linten_on_tcp(Port) ->
+   case gen_tcp:listen(Port, [binary, {reuseaddr, true}, {active, once}]) of
+      {ok, Listen} ->
+         % io:format("tcp listen return ok. Enter server loop to accept connects. ~n"),
+         start_server(?PARALLEL_NUM, Listen);
+      Other ->
+         io:format("Can't listen on socket ~p~n", [Other])
+   end.
+
+start_server(0, _) ->
+   true;
+start_server(Num, LS) ->
+   spawn_link(fun() -> server_access_loop(LS) end),
+   start_server(Num-1, LS).
+
